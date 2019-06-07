@@ -7,17 +7,17 @@ function cambiarNombre(nuevoNombre) {
     cambia = nuevoNombre
 }
 
-const getUserAll = new Promise(function(todoBien, todoMal) {
+const getUserAll = new Promise(function (todoBien, todoMal) {
     // llamar a un api
-    setTimeout(function() {
+    setTimeout(function () {
         // luego de 3 segundos
         todoBien('se acabó el tiempo');
     }, 5000)
 })
 
-const getUser = new Promise(function(todoBien, todoMal) {
+const getUser = new Promise(function (todoBien, todoMal) {
     // llamar a un api
-    setTimeout(function() {
+    setTimeout(function () {
         // luego de 3 segundos
         todoBien('se acabó el tiempo 3');
     }, 3000)
@@ -32,13 +32,13 @@ const getUser = new Promise(function(todoBien, todoMal) {
 //   })
 
 Promise.race([
-        getUser,
-        getUserAll,
-    ])
-    .then(function(message) {
+    getUser,
+    getUserAll,
+])
+    .then(function (message) {
         console.log(message);
     })
-    .catch(function(message) {
+    .catch(function (message) {
         console.log(message)
     })
 
@@ -46,23 +46,23 @@ Promise.race([
 
 $.ajax('https://randomuser.me/api/sdfdsfdsfs', {
     method: 'GET',
-    success: function(data) {
+    success: function (data) {
         console.log(data)
     },
-    error: function(error) {
+    error: function (error) {
         console.log(error)
     }
 })
 
 fetch('https://randomuser.me/api/dsfdsfsd')
-    .then(function(response) {
+    .then(function (response) {
         // console.log(response)
         return response.json()
     })
-    .then(function(user) {
+    .then(function (user) {
         console.log('user', user.results[0].name.first)
     })
-    .catch(function() {
+    .catch(function () {
         console.log('algo falló')
     });
 
@@ -73,15 +73,15 @@ fetch('https://randomuser.me/api/dsfdsfsd')
         return data;
 
     }
-//debugger
-const actionList = await getData('https://yts.am/api/v2/list_movies.json?genre=action')
-  const dramaList = await getData('https://yts.am/api/v2/list_movies.json?genre=drama')
-  const animationList = await getData('https://yts.am/api/v2/list_movies.json?genre=animation')
-  console.log(actionList, dramaList, animationList)
+    //debugger
+    const actionList = await getData('https://yts.am/api/v2/list_movies.json?genre=action')
+    const dramaList = await getData('https://yts.am/api/v2/list_movies.json?genre=drama')
+    const animationList = await getData('https://yts.am/api/v2/list_movies.json?genre=animation')
+    console.log(actionList, dramaList, animationList)
 
-  function videoItemTemplate (movie) {
-    return (
-        `<div class="primaryPlaylistItem">
+    function videoItemTemplate(movie) {
+        return (
+            `<div class="primaryPlaylistItem">
         <div class="primaryPlaylistItem-image">
           <img src="${movie.medium_cover_image}">
         </div>
@@ -89,20 +89,32 @@ const actionList = await getData('https://yts.am/api/v2/list_movies.json?genre=a
           ${movie.title}
         </h4>
       </div>`
-    )
-}
+        )
+    }
 
-// console.log(videoItemTemplate(movie));
+    function createTemplate(HTMLString) {
+        const $html = document.implementation.createHTMLDocument();
+        $html.body.innerHTML = HTMLString;
+        return $html.body.children[0];
+    }
 
-    actionList.data.movies.forEach((movie) => {
-        //debugger
-        const HTMLString = videoItemTemplate(movie);
-        console.log(HTMLString);
-    });
-    
+    function renderMovieList(list, $container) {
+        $container.children[0].remove();
+        list.forEach((movie) => {
+            const HTMLString = videoItemTemplate(movie);
+            const movieElement = createTemplate(HTMLString);
+            $container.append(movieElement);
+        })
+    }
+
     const $actionContainer = document.querySelector('#action');
+    renderMovieList(actionList.data.movies, $actionContainer);
+
     const $dramaContainer = document.getElementById('drama');
+    renderMovieList(dramaList.data.movies, $dramaContainer);
+
     const $animationContainer = document.getElementById('animation');
+    renderMovieList(animationList.data.movies, $animationContainer);
 
     const $featuringContainer = document.getElementById('featuring');
     const $form = document.getElementById('form');
