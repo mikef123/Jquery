@@ -7,17 +7,17 @@ function cambiarNombre(nuevoNombre) {
     cambia = nuevoNombre
 }
 
-const getUserAll = new Promise(function(todoBien, todoMal) {
+const getUserAll = new Promise(function (todoBien, todoMal) {
     // llamar a un api
-    setTimeout(function() {
+    setTimeout(function () {
         // luego de 3 segundos
         todoBien('se acabó el tiempo');
     }, 5000)
 })
 
-const getUser = new Promise(function(todoBien, todoMal) {
+const getUser = new Promise(function (todoBien, todoMal) {
     // llamar a un api
-    setTimeout(function() {
+    setTimeout(function () {
         // luego de 3 segundos
         todoBien('se acabó el tiempo 3');
     }, 3000)
@@ -32,13 +32,13 @@ const getUser = new Promise(function(todoBien, todoMal) {
 //   })
 
 Promise.race([
-        getUser,
-        getUserAll,
-    ])
-    .then(function(message) {
+    getUser,
+    getUserAll,
+])
+    .then(function (message) {
         console.log(message);
     })
-    .catch(function(message) {
+    .catch(function (message) {
         console.log(message)
     })
 
@@ -46,23 +46,23 @@ Promise.race([
 
 $.ajax('https://randomuser.me/api/sdfdsfdsfs', {
     method: 'GET',
-    success: function(data) {
+    success: function (data) {
         console.log(data)
     },
-    error: function(error) {
+    error: function (error) {
         console.log(error)
     }
 })
 
 fetch('https://randomuser.me/api/dsfdsfsd')
-    .then(function(response) {
+    .then(function (response) {
         // console.log(response)
         return response.json()
     })
-    .then(function(user) {
+    .then(function (user) {
         console.log('user', user.results[0].name.first)
     })
-    .catch(function() {
+    .catch(function () {
         console.log('algo falló')
     });
 
@@ -70,8 +70,9 @@ fetch('https://randomuser.me/api/dsfdsfsd')
     async function getData(url) {
         const response = await fetch(url)
         const data = await response.json();
-        return data;
-
+        if (statusbar.data.movie_count > 0) {
+            return data;
+        }
     }
     //debugger
     const $form = document.getElementById('form');
@@ -100,7 +101,7 @@ fetch('https://randomuser.me/api/dsfdsfsd')
         )
     }
 
-    $form.addEventListener('submit', async(event) => {
+    $form.addEventListener('submit', async (event) => {
         event.preventDefault();
         $home.classList.add('search-active');
         const $loader = document.createElement('img');
@@ -111,31 +112,34 @@ fetch('https://randomuser.me/api/dsfdsfsd')
         })
         $featuringContainer.append($loader);
         const data = new FormData($form);
-        const {
-            data: {
-                movies: pelis
-            }
-        } = await getData(`${BASE_API}list_movies.json?limit=1&query_term=${data.get('name')}`)
-        const HTMLString = featuringTemplate(pelis[0]);
-        $featuringContainer.innerHTML = HTMLString;
+        try {
+            const {
+                data: {
+                    movies: pelis
+                }
+            } = await getData(`${BASE_API}list_movies.json?limit=1&query_term=${data.get('name')}`)
+            const HTMLString = featuringTemplate(pelis[0]);
+            $featuringContainer.innerHTML = HTMLString;
+        }
+        catch {
+            swal("Oops", error.message, "error");
+            $loader.remove();
+            $home.classList.remove('search-action');
+        }
 
     })
 
-    const { data: { movies: actionList } } = await getData(`${BASE_API}list_movies.json?genre=action`)
-    const { data: { movies: dramaList } } = await getData(`${BASE_API}list_movies.json?genre=drama`)
-    const { data: { movies: animationList } } = await getData(`${BASE_API}list_movies.json?genre=animation`)
-    console.log(actionList, dramaList, animationList)
 
     function videoItemTemplate(movie, category) {
         return (
             `<div class="primaryPlaylistItem" data-id="${movie.id}" data-category=${category}>
-        <div class="primaryPlaylistItem-image">
+            <div class="primaryPlaylistItem-image">
           <img src="${movie.medium_cover_image}">
-        </div>
+          </div>
         <h4 class="primaryPlaylistItem-title">
           ${movie.title}
-        </h4>
-      </div>`
+          </h4>
+          </div>`
         )
     }
 
@@ -158,18 +162,26 @@ fetch('https://randomuser.me/api/dsfdsfsd')
             const HTMLString = videoItemTemplate(movie, category);
             const movieElement = createTemplate(HTMLString);
             $container.append(movieElement);
+            const image = movieElement.querySelector('img');
+            image.addEventListener('load', (event) => {
+                event.srcElement.classList.add('fadeIn');
+            })
             addEventClick(movieElement);
         })
     }
+
+    const { data: { movies: actionList } } = await getData(`${BASE_API}list_movies.json?genre=action`)
 
     const $actionContainer = document.querySelector('#action');
     renderMovieList(actionList, $actionContainer, 'action');
 
     const $dramaContainer = document.getElementById('drama');
     renderMovieList(dramaList, $dramaContainer, 'drama');
+    const { data: { movies: dramaList } } = await getData(`${BASE_API}list_movies.json?genre=drama`)
 
     const $animationContainer = document.getElementById('animation');
     renderMovieList(animationList, $animationContainer, 'animation');
+    const { data: { movies: animationList } } = await getData(`${BASE_API}list_movies.json?genre=animation`)
 
 
 
@@ -182,10 +194,22 @@ fetch('https://randomuser.me/api/dsfdsfsd')
     const $modalImage = $modal.querySelector('img');
     const $modalDescription = $modal.querySelector('p');
 
+    function findById(list, id) {
+        return list.find(movie => movie.id === parseInt(id, 10))
+    }
     function findMovie(id, category) {
-        actionList.find((movie) => {
-            return movie.id === parseInt(id, 10);
-        })
+        switch (category) {
+            case 'action': {
+                return findById(actionList, id);
+            }
+            case 'drama': {
+                return findById(dramaList, id);
+            }
+            default: {
+                return findById(animationList, id);
+            }
+        }
+
     }
 
     function showModal($element) {
@@ -194,6 +218,10 @@ fetch('https://randomuser.me/api/dsfdsfsd')
         const id = $element.dataset.id;
         const category = $element.dataset.category;
         const data = findMovie(id, category);
+
+        $modalTitle.textContent = data.title;
+        $modalImage.setAttribute('src', data.medium_cover_image);
+        $modalDescription.textContent = data.description_full;
     }
 
     function hideModal() {
